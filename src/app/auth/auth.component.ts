@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {NgForm} from '@angular/forms';
-import {AuthService} from './auth.service';
+import {AuthResponseData, AuthService} from './auth.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-auth',
@@ -32,24 +33,34 @@ export class AuthComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
+    let authObservable: Observable<AuthResponseData>;
+
     if (this.isLoginMode) {
-
+      authObservable = this.login(email, password);
     } else {
-      this.signUp(email, password);
+      authObservable = this.signUp(email, password);
     }
-
+    this.handleResponse(authObservable);
     form.reset();
   }
 
   private signUp(email, password) {
-    this.authService.signUp(email, password)
+    return this.authService.signUp(email, password);
+  }
+
+  private login(email, password) {
+    return this.authService.signIn(email, password);
+  }
+
+  private handleResponse(response: Observable<AuthResponseData>) {
+    response
       .subscribe(responseData => {
-          console.log(responseData);
-          this.isLoading = false;
-        },
-        errorMessage => {
-          this.error = errorMessage;
-          this.isLoading = false;
-        });
+        console.log(responseData);
+        this.isLoading = false;
+      },
+      errorMessage => {
+        this.error = errorMessage;
+        this.isLoading = false;
+      });
   }
 }
