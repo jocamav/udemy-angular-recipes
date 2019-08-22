@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse, HttpParams} from '@angular/common/http';
-import {catchError} from 'rxjs/operators';
-import {throwError} from 'rxjs';
+import {catchError, tap} from 'rxjs/operators';
+import {Subject, throwError} from 'rxjs';
 import {environment} from '../../environments/environment';
+import {User} from './user-model';
 
 export interface AuthResponseData {
   idToken: string;
@@ -18,18 +19,32 @@ export interface AuthResponseData {
 })
 export class AuthService {
 
-  appKey = environment.googleKey;
-  url = 'https://identitytoolkit.googleapis.com/v1/accounts';
-  appParams = new HttpParams().set('key', this.appKey);
+  user = new Subject<User>();
 
-  constructor(private http: HttpClient) { }
+  private appKey = environment.googleKey;
+  private url = 'https://identitytoolkit.googleapis.com/v1/accounts';
+  private appParams = new HttpParams().set('key', this.appKey);
+
+  constructor(private http: HttpClient) {
+  }
 
   signUp(userEmail: string, userPassword: string) {
     const signUpCredentials = this.getAuthCredentials(userEmail, userPassword);
 
     return this.http
       .post<AuthResponseData>(this.url + ':signUp', signUpCredentials, {params: this.appParams})
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError(this.handleError),
+        tap(responseData => {
+            this.handleAuthentication(responseData.email, responseData.localId, responseData.idToken, +responseData.expiresIn);
+          }
+        ));
+  }
+
+  private handleAuthentication(email: string, userId: string, token: string, expiresIn: number) {
+    const expirationDate = new Date(new Date().getTime() + (expiresIn * 1000));
+    const user = new User(email, userId, token, expirationDate);
+    this.user.next(user);
   }
 
   private getAuthCredentials(userEmail: string, userPassword: string) {
@@ -46,7 +61,11 @@ export class AuthService {
 
     return this.http
       .post<AuthResponseData>(this.url + ':signInWithPassword', signUpCredentials, {params: this.appParams})
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError(this.handleError),
+        tap(responseData => {
+          this.handleAuthentication(responseData.email, responseData.localId, responseData.idToken, +responseData.expiresIn);
+        }));
   }
 
   private handleError(errorResponse: HttpErrorResponse) {
