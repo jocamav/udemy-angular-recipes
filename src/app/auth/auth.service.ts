@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse, HttpParams} from '@angular/common/http';
 import {catchError, tap} from 'rxjs/operators';
-import {Subject, throwError} from 'rxjs';
+import {BehaviorSubject, Subject, throwError} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {User} from './user-model';
 
@@ -19,7 +19,7 @@ export interface AuthResponseData {
 })
 export class AuthService {
 
-  user = new Subject<User>();
+  user = new BehaviorSubject<User>(null);
 
   private appKey = environment.googleKey;
   private url = 'https://identitytoolkit.googleapis.com/v1/accounts';
