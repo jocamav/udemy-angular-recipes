@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpParams} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse, HttpParams} from '@angular/common/http';
 import {catchError} from 'rxjs/operators';
 import {throwError} from 'rxjs';
+import {environment} from '../../environments/environment';
 
 export interface AuthResponseData {
   idToken: string;
@@ -17,7 +18,7 @@ export interface AuthResponseData {
 })
 export class AuthService {
 
-  appKey = 'AIzaSyC1HHjPEVqO5WJ5288nTwukewdCOAl0nCo';
+  appKey = environment.googleKey;
   url = 'https://identitytoolkit.googleapis.com/v1/accounts';
   appParams = new HttpParams().set('key', this.appKey);
 
@@ -28,10 +29,7 @@ export class AuthService {
 
     return this.http
       .post<AuthResponseData>(this.url + ':signUp', signUpCredentials, {params: this.appParams})
-      .pipe(catchError(errorResponse => {
-        const message = this.getErrorMessage(errorResponse);
-        return throwError(message);
-      }));
+      .pipe(catchError(this.handleError));
   }
 
   private getAuthCredentials(userEmail: string, userPassword: string) {
@@ -48,13 +46,10 @@ export class AuthService {
 
     return this.http
       .post<AuthResponseData>(this.url + ':signInWithPassword', signUpCredentials, {params: this.appParams})
-      .pipe(catchError(errorResponse => {
-        const message = this.getErrorMessage(errorResponse);
-        return throwError(message);
-      }));
+      .pipe(catchError(this.handleError));
   }
 
-  private getErrorMessage(errorResponse): string {
+  private handleError(errorResponse: HttpErrorResponse) {
     let message = 'An error occurred!';
 
     if (errorResponse.error && errorResponse.error.error) {
@@ -62,11 +57,15 @@ export class AuthService {
       switch (errorCode) {
         case 'EMAIL_EXISTS':
           message = 'This mail is already registered';
-          break
+          break;
+        case 'EMAIL_NOT_FOUND':
+          message = 'Wrong credentials (email)!';
+          break;
         case 'INVALID_PASSWORD':
-          message = 'Wrong credentials!';
+          message = 'Wrong credentials (password)!';
+          break;
       }
     }
-    return message;
+    return throwError(message);
   }
 }
