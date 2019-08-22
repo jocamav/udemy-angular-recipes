@@ -8,10 +8,15 @@ import {RecipeEditComponent} from './recipes/recipe-edit/recipe-edit.component';
 import {RecipesResolverService} from './recipes-resolver.service';
 import {HttpClientModule} from '@angular/common/http';
 import {AuthComponent} from './auth/auth.component';
+import {AuthGuard} from './auth/auth-guard';
 
 const appRoutes: Routes = [
   {path: '' , redirectTo: 'recipes', pathMatch: 'full'},
-  {path: 'recipes' , component: RecipesComponent, resolve: [RecipesResolverService], children: [
+  {path: 'recipes' ,
+    component: RecipesComponent,
+    resolve: [RecipesResolverService],
+    canActivate: [AuthGuard],
+    children: [
       {path: '', component: RecipeStartComponent },
       {path: 'new', component: RecipeEditComponent },
       {path: ':id', component: RecipeDetailComponent , resolve: [RecipesResolverService]},
