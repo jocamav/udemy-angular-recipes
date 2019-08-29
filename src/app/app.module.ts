@@ -11,21 +11,20 @@ import {RecipesModule} from './recipes/recipes.module';
 import {ShoppingListModule} from './shopping-list/shopping-list.module';
 import {SharedModule} from './shared/shared.module';
 import {CoreModule} from './core/core.module';
+import {AuthModule} from './auth/auth.module';
 
 @NgModule({
   declarations: [
     AppComponent,
-    HeaderComponent,
-    AuthComponent
+    HeaderComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    FormsModule,
-    ReactiveFormsModule,
     HttpClientModule,
     RecipesModule,
     ShoppingListModule,
+    AuthModule,
     SharedModule,
     CoreModule
   ],
